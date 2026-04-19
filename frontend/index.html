@@ -446,7 +446,7 @@ startListening()
 /* START */
 
 async function startInterview(){
-recognition.start()
+document.querySelector("button").disabled=true
 startInterviewTimer()
 
 let response=await fetch("https://ai-tutor-interview.onrender.com/interview/start")
