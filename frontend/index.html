@@ -239,19 +239,29 @@ let SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecogniti
 let recognition = new SpeechRecognition()
 
 recognition.lang = "en-US"
-recognition.continuous = true
+recognition.continuous = false
 recognition.interimResults = false
 
 let listeningEnabled = false
-
+    
 recognition.onend = function(){
 
-/* auto restart if interview still listening */
 if(listeningEnabled){
 recognition.start()
 }
 
 }
+
+recognition.onerror = function(event){
+
+console.log("Speech recognition error:", event.error)
+
+if(listeningEnabled){
+recognition.start()
+}
+
+}
+
 
 // function startListening(){
 // listeningEnabled=true
@@ -261,17 +271,22 @@ recognition.start()
 // }
 function startListening(){
 
-if(!listeningEnabled){
+try{
+
+listeningEnabled = true
 
 recognition.start()
-listeningEnabled=true
+
+document.getElementById("mic").style.display = "block"
+document.getElementById("status").innerText = "Listening..."
+
+}catch(e){
+
+console.log("Recognition restart prevented")
 
 }
 
-document.getElementById("mic").style.display="block"
-document.getElementById("status").innerText="Listening..."
-
-}    
+} 
 
 // function stopListening(){
 // listeningEnabled=false
