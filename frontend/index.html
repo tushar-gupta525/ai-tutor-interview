@@ -227,32 +227,66 @@ border-radius:5px;
 <script>
 
 /* SPEECH RECOGNITION */
+/* SPEECH RECOGNITION */
 
-let SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition
-let recognition=new SpeechRecognition()
+/* request microphone permission first */
+navigator.mediaDevices.getUserMedia({audio:true})
+.then(()=>console.log("Microphone permission granted"))
+.catch(err=>console.log("Microphone blocked:",err))
 
-recognition.lang="en-US"
-recognition.continuous=true
 
-let listeningEnabled=false
+let SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+let recognition = new SpeechRecognition()
 
-recognition.onend=function(){
-if(listeningEnabled) recognition.start()
-}
+recognition.lang = "en-US"
+recognition.continuous = true
+recognition.interimResults = false
 
-function startListening(){
-listeningEnabled=true
-document.getElementById("mic").style.display="block"
-document.getElementById("status").innerText="Listening..."
+let listeningEnabled = false
+
+recognition.onend = function(){
+
+/* auto restart if interview still listening */
+if(listeningEnabled){
 recognition.start()
 }
 
-function stopListening(){
-listeningEnabled=false
-document.getElementById("mic").style.display="none"
-recognition.stop()
 }
 
+// function startListening(){
+// listeningEnabled=true
+// document.getElementById("mic").style.display="block"
+// document.getElementById("status").innerText="Listening..."
+// recognition.start()
+// }
+function startListening(){
+
+if(!listeningEnabled){
+
+recognition.start()
+listeningEnabled=true
+
+}
+
+document.getElementById("mic").style.display="block"
+document.getElementById("status").innerText="Listening..."
+
+}    
+
+// function stopListening(){
+// listeningEnabled=false
+// document.getElementById("mic").style.display="none"
+// recognition.stop()
+// }
+function stopListening(){
+
+document.getElementById("mic").style.display="none"
+document.getElementById("status").innerText=""
+
+recognition.stop()
+listeningEnabled=false
+
+}
 /* CHAT */
 
 function addMessage(role,text){
@@ -412,7 +446,7 @@ startListening()
 /* START */
 
 async function startInterview(){
-
+recognition.start()
 startInterviewTimer()
 
 let response=await fetch("https://ai-tutor-interview.onrender.com/interview/start")
