@@ -415,7 +415,7 @@ async function startInterview(){
 
 startInterviewTimer()
 
-let response=await fetch("http://127.0.0.1:8000/interview/start")
+let response=await fetch("http://ai-tutor-interview.onrender.com/interview/start")
 let data=await response.json()
 
 addMessage("ai",data.question)
@@ -437,7 +437,7 @@ addMessage("user",transcript)
 stopListening()
 
 let response=await fetch(
-"http://127.0.0.1:8000/interview/answer?user_answer="+encodeURIComponent(transcript),
+"http://ai-tutor-interview.onrender.com/interview/answer?user_answer="+encodeURIComponent(transcript),
 {method:"POST"}
 )
 
