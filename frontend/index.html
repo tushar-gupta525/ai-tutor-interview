@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>AI Tutor Interview</title>
+
+<style>
+
+body{
+font-family:"Segoe UI",Arial;
+background:radial-gradient(circle at 20% 20%,#1e293b,#020617);
+margin:0;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+color:#e5e7eb;
+}
+
+.container{
+width:1000px;
+height:88vh;
+padding:30px;
+
+background:rgba(15,23,42,0.75);
+backdrop-filter:blur(12px);
+
+border-radius:18px;
+border:1px solid rgba(255,255,255,0.05);
+
+box-shadow:
+0 30px 80px rgba(0,0,0,0.6),
+inset 0 1px 0 rgba(255,255,255,0.04);
+
+display:flex;
+flex-direction:column;
+}
+
+h1{
+text-align:center;
+margin-bottom:8px;
+}
+
+#timer{
+text-align:center;
+color:#f87171;
+font-weight:600;
+margin-bottom:5px;
+}
+
+#thinkingTimer{
+text-align:center;
+color:#94a3b8;
+margin-bottom:10px;
+}
+
+/* CHAT AREA */
+
+.transcript{
+flex:1;
+overflow-y:auto;
+background:rgba(2,6,23,0.65);
+border-radius:14px;
+padding:22px;
+border:1px solid rgba(255,255,255,0.04);
+}
+
+.message{
+display:flex;
+align-items:flex-start;
+margin-bottom:16px;
+max-width:75%;
+}
+
+.message.user{
+flex-direction:row-reverse;
+margin-left:auto;
+}
+
+.avatar{
+width:36px;
+height:36px;
+margin-right:10px;
+}
+
+.message.user .avatar{
+margin-left:10px;
+margin-right:0;
+}
+
+.avatar img{
+width:36px;
+border-radius:50%;
+}
+
+.bubble{
+padding:12px 16px;
+border-radius:12px;
+line-height:1.6;
+font-size:15px;
+box-shadow:0 2px 6px rgba(0,0,0,0.2);
+}
+
+.ai .bubble{
+background:linear-gradient(135deg,#1e293b,#0f172a);
+border:1px solid rgba(255,255,255,0.06);
+color:#e2e8f0;
+border-top-left-radius:6px;
+}
+
+.user .bubble{
+background:linear-gradient(135deg,#6366f1,#4f46e5);
+color:white;
+border-top-right-radius:6px;
+box-shadow:0 6px 18px rgba(99,102,241,0.4);
+}
+
+button{
+margin-top:14px;
+align-self:center;
+padding:12px 26px;
+
+background:linear-gradient(135deg,#6366f1,#4f46e5);
+
+border:none;
+border-radius:10px;
+
+color:white;
+font-weight:600;
+
+cursor:pointer;
+
+box-shadow:0 10px 25px rgba(79,70,229,0.45);
+}
+
+button:hover{
+transform:translateY(-1px);
+box-shadow:0 15px 30px rgba(79,70,229,0.6);
+}
+
+.mic{
+margin-top:12px;
+width:70px;
+height:70px;
+border-radius:50%;
+background:#4f46e5;
+margin-left:auto;
+margin-right:auto;
+display:none;
+position:relative;
+}
+
+.mic::before,
+.mic::after{
+content:"";
+position:absolute;
+border-radius:50%;
+border:3px solid #6366f1;
+top:-10px;
+left:-10px;
+right:-10px;
+bottom:-10px;
+animation:pulse 1.6s infinite;
+}
+
+.mic::after{
+animation-delay:.5s;
+}
+
+@keyframes pulse{
+0%{transform:scale(.9);opacity:.9}
+70%{transform:scale(1.3);opacity:0}
+100%{opacity:0}
+}
+
+#status{
+text-align:center;
+margin-top:6px;
+color:#94a3b8;
+}
+
+.evaluation{
+margin-top:10px;
+}
+
+.score{
+margin-bottom:14px;
+}
+
+.bar{
+height:10px;
+background:#1e293b;
+border-radius:5px;
+}
+
+.fill{
+height:10px;
+background:linear-gradient(90deg,#6366f1,#4f46e5);
+border-radius:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>AI Tutor Interview</h1>
+
+<h3 id="timer">Interview Time: 05:00</h3>
+
+<div id="thinkingTimer"></div>
+
+<div id="transcript" class="transcript"></div>
+
+<button onclick="startInterview()">Start Interview</button>
+
+<div id="mic" class="mic"></div>
+
+<div id="status"></div>
+
+</div>
+
+<script>
+
+/* SPEECH RECOGNITION */
+
+let SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition
+let recognition=new SpeechRecognition()
+
+recognition.lang="en-US"
+recognition.continuous=true
+
+let listeningEnabled=false
+
+recognition.onend=function(){
+if(listeningEnabled) recognition.start()
+}
+
+function startListening(){
+listeningEnabled=true
+document.getElementById("mic").style.display="block"
+document.getElementById("status").innerText="Listening..."
+recognition.start()
+}
+
+function stopListening(){
+listeningEnabled=false
+document.getElementById("mic").style.display="none"
+recognition.stop()
+}
+
+/* CHAT */
+
+function addMessage(role,text){
+
+let transcript=document.getElementById("transcript")
+
+let message=document.createElement("div")
+message.className="message "+role
+
+let avatar=document.createElement("div")
+avatar.className="avatar"
+
+avatar.innerHTML = role==="ai"
+? "<img src='https://cdn-icons-png.flaticon.com/512/4712/4712035.png'>"
+: "<img src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'>"
+
+let bubble=document.createElement("div")
+bubble.className="bubble"
+
+message.appendChild(avatar)
+message.appendChild(bubble)
+
+transcript.appendChild(message)
+
+transcript.scrollTop=transcript.scrollHeight
+
+if(role==="ai"){
+typeWriterBubble(text,bubble)
+}else{
+bubble.innerText=text
+}
+
+}
+
+async function typeWriterBubble(text,element){
+
+element.textContent=""
+
+await new Promise(r=>setTimeout(r,2000))
+
+for(let char of text){
+
+element.textContent+=char
+await new Promise(r=>setTimeout(r,32+Math.random()*30))
+
+}
+
+}
+
+/* VOICE */
+
+let voices=[]
+speechSynthesis.onvoiceschanged=()=>voices=speechSynthesis.getVoices()
+
+function speak(text){
+
+return new Promise(resolve=>{
+
+speechSynthesis.cancel()
+
+let speech=new SpeechSynthesisUtterance(text)
+
+let natural=voices.find(v=>v.name.includes("Google")||v.name.includes("Microsoft"))
+
+speech.voice=natural||voices[0]
+speech.rate=0.9
+speech.onend=resolve
+
+speechSynthesis.speak(speech)
+
+})
+
+}
+
+/* FLEXIBLE TIMER */
+
+let targetDuration=5*60*1000
+let maxDuration=7*60*1000
+let startTime
+let paused=false
+let interviewShouldEnd=false
+let interviewTimeReached = false
+
+function startInterviewTimer(){
+
+startTime=Date.now()
+
+setInterval(()=>{
+
+if(paused) return
+
+let elapsed=Date.now()-startTime
+let remaining=targetDuration-elapsed
+
+// if(elapsed>=targetDuration){
+// interviewShouldEnd=true
+// }
+if(elapsed>=targetDuration){
+interviewShouldEnd=true
+interviewTimeReached=true
+}
+
+if(elapsed>=maxDuration){
+stopListening()
+document.getElementById("timer").innerText="Interview completed"
+}
+
+let display=Math.max(0,remaining)
+
+let minutes=Math.floor(display/60000)
+let seconds=Math.floor((display%60000)/1000)
+
+document.getElementById("timer").innerText=
+`Interview Time: ${minutes}:${seconds.toString().padStart(2,'0')}`
+
+},1000)
+
+}
+
+function pauseInterviewTimer(){paused=true}
+function resumeInterviewTimer(){paused=false}
+
+/* THINK TIMER */
+
+function startThinkingTimer(){
+
+pauseInterviewTimer()
+
+let time=10
+
+document.getElementById("thinkingTimer").innerText=
+`Think about your answer: ${time}s`
+
+let thinking=setInterval(()=>{
+
+time--
+
+document.getElementById("thinkingTimer").innerText=
+`Think about your answer: ${time}s`
+
+if(time<=0){
+
+clearInterval(thinking)
+
+document.getElementById("thinkingTimer").innerText=""
+
+resumeInterviewTimer()
+
+startListening()
+
+}
+
+},1000)
+
+}
+
+/* START */
+
+async function startInterview(){
+
+startInterviewTimer()
+
+let response=await fetch("http://127.0.0.1:8000/interview/start")
+let data=await response.json()
+
+addMessage("ai",data.question)
+
+await speak(data.question)
+
+startThinkingTimer()
+
+}
+
+/* RESULT */
+
+recognition.onresult=async function(event){
+
+let transcript=event.results[event.results.length-1][0].transcript
+
+addMessage("user",transcript)
+
+stopListening()
+
+let response=await fetch(
+"http://127.0.0.1:8000/interview/answer?user_answer="+encodeURIComponent(transcript),
+{method:"POST"}
+)
+
+let data=await response.json()
+
+// if(data.evaluation){
+if(data.evaluation && interviewTimeReached){
+
+    let evaluation=data.evaluation
+
+if(typeof evaluation==="string") evaluation=JSON.parse(evaluation)
+
+let html="<div class='evaluation'><h3>Evaluation Results</h3>"
+
+for(let key in evaluation){
+
+html+=`
+<div class="score">
+<b>${key}</b>
+<div class="bar">
+<div class="fill" style="width:${evaluation[key]*10}%"></div>
+</div>
+${evaluation[key]}/10
+</div>
+`
+
+}
+
+html+="</div>"
+
+document.getElementById("transcript").innerHTML+=html
+
+return
+
+}
+
+/* if time exceeded but question finished */
+
+if(interviewShouldEnd){
+document.getElementById("timer").innerText="Interview completed"
+return
+}
+
+let nextQuestion=data.next_question||data.message
+
+addMessage("ai",nextQuestion)
+
+await speak(nextQuestion)
+
+startThinkingTimer()
+
+}
+
+</script>
+
+</body>
+</html>
