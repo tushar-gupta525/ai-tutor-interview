@@ -241,7 +241,8 @@ let recognition = new SpeechRecognition()
 recognition.lang = "en-US"
 recognition.continuous = false
 recognition.interimResults = false
-
+recognition.maxAlternatives = 1
+    
 let listeningEnabled = false
     
 recognition.onend = function(){
@@ -459,21 +460,43 @@ startListening()
 }
 
 /* START */
-
 async function startInterview(){
+
 document.querySelector("button").disabled=true
+
+/* start microphone immediately from user gesture */
+recognition.start()
+listeningEnabled = true
+
 startInterviewTimer()
 
-let response=await fetch("https://ai-tutor-interview.onrender.com/interview/start")
-let data=await response.json()
+let response = await fetch("https://ai-tutor-interview.onrender.com/interview/start")
+let data = await response.json()
 
 addMessage("ai",data.question)
 
 await speak(data.question)
 
+/* pause listening while AI speaks */
+stopListening()
+
 startThinkingTimer()
 
 }
+// async function startInterview(){
+// document.querySelector("button").disabled=true
+// startInterviewTimer()
+
+// let response=await fetch("https://ai-tutor-interview.onrender.com/interview/start")
+// let data=await response.json()
+
+// addMessage("ai",data.question)
+
+// await speak(data.question)
+
+// startThinkingTimer()
+
+// }
 
 /* RESULT */
 
