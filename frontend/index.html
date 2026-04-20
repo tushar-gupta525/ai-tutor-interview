@@ -468,7 +468,7 @@ document.querySelector("button").disabled=true
 recognition.start()
 listeningEnabled = true
 
-startInterviewTimer()
+// startInterviewTimer()
 
 let response = await fetch("https://ai-tutor-interview.onrender.com/interview/start")
 let data = await response.json()
@@ -516,8 +516,8 @@ let response=await fetch(
 let data=await response.json()
 
 // if(data.evaluation){
-if(data.evaluation && interviewTimeReached){
-
+// if(data.evaluation && interviewTimeReached){
+if(data.evaluation){
     let evaluation=data.evaluation
 
 if(typeof evaluation==="string") evaluation=JSON.parse(evaluation)
